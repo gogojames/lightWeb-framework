@@ -156,7 +156,7 @@ public class Router {
         if (methodRoutes == null) {
             return null;
         }
-        System.out.printf("Finding route for method: %s, path: %s%n", method, path);
+        //System.out.printf("Finding route for method: %s, path: %s%n", method, path);
         return methodRoutes.parallelStream()
             .filter(route -> route.regex().matcher(path).matches())
             .findFirst()
