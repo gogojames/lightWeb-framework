@@ -1,55 +1,55 @@
 # LightWeb Framework 🚀
 
-基于 **Java 25 TLS 版本** 开发的高性能轻量级网络框架，不依赖任何现有WEB框架。全面应用Java 25新特性，专为现代Web应用设计。
+A high-performance lightweight web framework based on **Java 25 TLS version**, with no dependencies on any existing WEB frameworks. Fully utilizes Java 25 new features, designed specifically for modern web applications.
 
-## ✨ 核心特性
+## ✨ Core Features
 
-### 🏗️ 架构设计
-- **零依赖**: 不依赖任何第三方Web框架
-- **模块化**: 清晰的模块分离设计
-- **高性能**: 专为高并发场景优化
-- **轻量级**: 低内存占用，快速启动
+### 🏗️ Architecture Design
+- **Zero Dependencies**: No reliance on any third-party web frameworks
+- **Modular**: Clear module separation design
+- **High Performance**: Optimized for high concurrency scenarios
+- **Lightweight**: Low memory footprint, fast startup
 
-### ⚡ 性能指标
-- **高并发支持**: 10K+ QPS 处理能力
-- **快速冷启动**: <500ms 启动时间
-- **低内存占用**: 优化的内存管理
-- **虚拟线程**: Java 25虚拟线程支持
+### ⚡ Performance Metrics
+- **High Concurrency Support**: 10K+ QPS processing capability
+- **Fast Cold Start**: <500ms startup time
+- **Low Memory Usage**: Optimized memory management
+- **Virtual Threads**: Java 25 virtual thread support
 
-### 🛡️ 安全防护
-- **XSS过滤**: 自动检测和过滤XSS攻击
-- **CSRF防护**: 令牌验证机制
-- **输入校验**: 请求参数自动验证
-- **安全头部**: 自动设置安全HTTP头部
+### 🛡️ Security Protection
+- **XSS Filtering**: Automatic detection and filtering of XSS attacks
+- **CSRF Protection**: Token verification mechanism
+- **Input Validation**: Automatic request parameter validation
+- **Security Headers**: Automatic setting of security HTTP headers
 
-### 🔧 技术特性
-- **Java 25新特性**: 全面应用记录类、模式匹配、文本块等
-- **RESTful API**: 符合RESTful设计原则
-- **中间件支持**: 灵活的中间件管道
-- **错误处理**: 统一的异常处理机制
-- **性能监控**: 实时性能指标监控
+### 🔧 Technical Features
+- **Java 25 New Features**: Comprehensive application of record classes, pattern matching, text blocks, etc.
+- **RESTful API**: Complies with RESTful design principles
+- **Middleware Support**: Flexible middleware pipeline
+- **Error Handling**: Unified exception handling mechanism
+- **Performance Monitoring**: Real-time performance metrics monitoring
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 环境要求
-- Java 25 或更高版本
+### Requirements
+- Java 25 or higher
 - Maven 3.6+
 
-### 安装运行
+### Installation & Run
 
 ```bash
-# 克隆项目
+# Clone project
 git clone <repository-url>
 cd lightweb-framework
 
-# 编译项目
+# Compile project
 mvn clean compile
 
-# 运行示例应用
+# Run example application
 mvn exec:java -Dexec.mainClass="com.lightweb.example.ExampleApp"
 ```
 
-### 基础使用
+### Basic Usage
 
 ```java
 import com.lightweb.framework.LightWebServer;
@@ -61,7 +61,7 @@ public class MyApp {
     public static void main(String[] args) throws Exception {
         Router router = new Router();
         
-        // 添加路由
+        // Add routes
         router.get("/hello", (req, res) -> {
             res.json("{\"message\": \"Hello, World!\"}");
         });
@@ -71,7 +71,7 @@ public class MyApp {
             res.json(String.format("{\"user_id\": \"%s\"}", userId));
         });
         
-        // 启动服务器
+        // Start server
         LightWebServer server = LightWebServer.builder()
             .port(8080)
             .router(router)
@@ -82,108 +82,108 @@ public class MyApp {
 }
 ```
 
-## 📁 项目结构
+## 📁 Project Structure
 
 ```
 src/main/java/com/lightweb/
 ├── framework/
-│   ├── LightWebServer.java      # 服务器主类
-│   ├── core/                    # 核心组件
-│   │   ├── Request.java         # 请求封装
-│   │   ├── Response.java        # 响应封装
-│   │   └── RequestParser.java   # 请求解析器
-│   ├── router/                  # 路由系统
-│   │   └── Router.java          # 路由器实现
-│   ├── security/                # 安全模块
-│   │   └── SecurityFilter.java  # 安全过滤器
-│   ├── error/                   # 错误处理
-│   │   └── ErrorHandler.java    # 错误处理器
-│   └── util/                    # 工具类
-│       └── PerformanceMonitor.java # 性能监控
-├── example/                     # 示例应用
-│   └── ExampleApp.java          # 完整示例
-└── test/                        # 单元测试
-    └── LightWebServerTest.java  # 测试用例
+│   ├── LightWebServer.java      # Server main class
+│   ├── core/                    # Core components
+│   │   ├── Request.java         # Request wrapper
+│   │   ├── Response.java        # Response wrapper
+│   │   └── RequestParser.java   # Request parser
+│   ├── router/                  # Routing system
+│   │   └── Router.java          # Router implementation
+│   ├── security/                # Security module
+│   │   └── SecurityFilter.java  # Security filter
+│   ├── error/                   # Error handling
+│   │   └── ErrorHandler.java    # Error handler
+│   └── util/                    # Utility classes
+│       └── PerformanceMonitor.java # Performance monitoring
+├── example/                     # Example applications
+│   └── ExampleApp.java          # Complete example
+└── test/                        # Unit tests
+    └── LightWebServerTest.java  # Test cases
 ```
 
-## 🔌 API 文档
+## 🔌 API Documentation
 
-### 路由系统
+### Routing System
 
-#### 基本路由
+#### Basic Routing
 ```java
-router.get("/path", (req, res) -> { /* 处理逻辑 */ });
-router.post("/path", (req, res) -> { /* 处理逻辑 */ });
-router.put("/path", (req, res) -> { /* 处理逻辑 */ });
-router.delete("/path", (req, res) -> { /* 处理逻辑 */ });
+router.get("/path", (req, res) -> { /* handling logic */ });
+router.post("/path", (req, res) -> { /* handling logic */ });
+router.put("/path", (req, res) -> { /* handling logic */ });
+router.delete("/path", (req, res) -> { /* handling logic */ });
 ```
 
-#### 路径参数
+#### Path Parameters
 ```java
 router.get("/users/:id", (req, res) -> {
     String userId = req.getPathParam("id").orElse("unknown");
-    // 使用 userId
+    // Use userId
 });
 ```
 
-#### 中间件
+#### Middleware
 ```java
 router.use((req, res) -> {
-    // 认证、日志等预处理
-    return true; // 继续处理
+    // Authentication, logging, etc.
+    return true; // Continue processing
 });
 ```
 
-### 请求处理
+### Request Handling
 
-#### 获取请求数据
+#### Getting Request Data
 ```java
-// 头部
+// Headers
 String value = req.getHeader("header-name").orElse("default");
 
-// 查询参数
+// Query parameters
 String param = req.getQueryParam("param-name").orElse("default");
 
-// 路径参数
+// Path parameters
 String pathParam = req.getPathParam("param-name").orElse("default");
 
-// 请求体
+// Request body
 String body = req.body();
 ```
 
-### 响应生成
+### Response Generation
 
-#### 设置响应
+#### Setting Response
 ```java
-// 状态码
+// Status codes
 res.status(200);
 res.ok();        // 200
 res.created();   // 201
 res.notFound();  // 404
 
-// 内容类型
+// Content type
 res.contentType("application/json");
 
-// 响应体
-res.body("文本内容");
+// Response body
+res.body("Text content");
 res.json("{\"key\": \"value\"}");
-res.html("<html>内容</html>");
+res.html("<html>Content</html>");
 
-// Cookie
+// Cookies
 res.cookie("name", "value");
 res.cookie("name", "value", Map.of("max-age", "3600"));
 ```
 
-## 🛡️ 安全特性
+## 🛡️ Security Features
 
-### 自动安全防护
-框架自动提供以下安全防护：
-- **XSS检测**: 自动识别和阻止XSS攻击
-- **CSRF令牌**: 保护表单提交安全
-- **输入验证**: 所有参数自动验证
-- **路径遍历防护**: 防止目录遍历攻击
+### Automatic Security Protection
+The framework automatically provides the following security protections:
+- **XSS Detection**: Automatically identifies and blocks XSS attacks
+- **CSRF Tokens**: Secures form submissions
+- **Input Validation**: All parameters automatically validated
+- **Path Traversal Protection**: Prevents directory traversal attacks
 
-### 安全配置
+### Security Configuration
 ```java
 SecurityFilter filter = new SecurityFilter()
     .enableXssFilter(true)
@@ -192,77 +192,77 @@ SecurityFilter filter = new SecurityFilter()
     .addAllowedOrigin("https://trusted-domain.com");
 ```
 
-## 📊 性能监控
+## 📊 Performance Monitoring
 
-框架内置性能监控系统：
+Built-in performance monitoring system:
 
 ```java
 PerformanceMonitor monitor = PerformanceMonitor.getInstance();
 
-// 获取性能指标
+// Get performance metrics
 double qps = monitor.getQps();
 double successRate = monitor.getSuccessRate();
 MemoryStats memory = monitor.getMemoryStats();
 
-// 生成详细报告
+// Generate detailed report
 String report = monitor.generateReport();
 ```
 
-## 🧪 测试
+## 🧪 Testing
 
-运行完整的测试套件：
+Run the complete test suite:
 
 ```bash
 mvn test
 ```
 
-测试覆盖包括：
-- 路由系统测试
-- 请求/响应处理测试
-- 安全过滤器测试
-- 性能监控测试
-- 错误处理测试
+Test coverage includes:
+- Routing system tests
+- Request/response handling tests
+- Security filter tests
+- Performance monitoring tests
+- Error handling tests
 
-## 🚀 部署
+## 🚀 Deployment
 
-### 本地部署
+### Local Deployment
 ```bash
 mvn clean package
 java -jar target/lightweb-framework-1.0.0.jar
 ```
 
-### 生产环境建议
-- 使用反向代理（Nginx）
-- 配置SSL/TLS加密
-- 设置适当的JVM参数
-- 启用监控和日志
+### Production Environment Recommendations
+- Use reverse proxy (Nginx)
+- Configure SSL/TLS encryption
+- Set appropriate JVM parameters
+- Enable monitoring and logging
 
-## 📈 性能基准
+## 📈 Performance Benchmarks
 
-| 指标 | 数值 | 说明 |
-|------|------|------|
-| 启动时间 | <500ms | 冷启动到可服务状态 |
-| 内存占用 | ~50MB | 基础运行内存需求 |
-| QPS能力 | 10,000+ | 并发请求处理能力 |
-| 响应时间 | <10ms | 平均请求处理时间 |
+| Metric | Value | Description |
+|--------|-------|-------------|
+| Startup Time | <500ms | Cold start to service-ready state |
+| Memory Usage | ~50MB | Basic runtime memory requirement |
+| QPS Capability | 10,000+ | Concurrent request processing capability |
+| Response Time | <10ms | Average request processing time |
 
-## 🔄 开发计划
+## 🔄 Development Plan
 
-- [ ] WebSocket支持
-- [ ] 模板引擎集成
-- [ ] 数据库连接池
-- [ ] 缓存系统
-- [ ] 集群支持
-- [ ] 更多安全特性
+- [ ] WebSocket support
+- [ ] Template engine integration
+- [ ] Database connection pool
+- [ ] Caching system
+- [ ] Cluster support
+- [ ] More security features
 
-## 🤝 贡献
+## 🤝 Contributing
 
-欢迎提交Issue和Pull Request！
+Welcome to submit Issues and Pull Requests!
 
-## 📄 许可证
+## 📄 License
 
-MIT License - 详见 [LICENSE](LICENSE) 文件
+MIT License - See [LICENSE](LICENSE) file for details
 
 ---
 
-**LightWeb Framework** - 为现代Java应用而生的高性能Web框架！
+**LightWeb Framework** - A high-performance web framework born for modern Java applications!
