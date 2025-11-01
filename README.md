@@ -1,4 +1,6 @@
 # LightWeb Framework 🚀
+[![中文](https://img.shields.io/badge/language-中文-blue.svg)](README_zh.md)
+[![English](https://img.shields.io/badge/language-English-blue.svg)](README.md)
 
 A high-performance lightweight web framework based on **Java 25 TLS version**, with no dependencies on any existing WEB frameworks. Fully utilizes Java 25 new features, designed specifically for modern web applications.
 
