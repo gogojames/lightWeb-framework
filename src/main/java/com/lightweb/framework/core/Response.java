@@ -26,10 +26,14 @@ public class Response {
         headers.put("X-Content-Type-Options", "nosniff");
         headers.put("X-Frame-Options", "DENY");
         headers.put("X-XSS-Protection", "1; mode=block");
+        headers.put("Connection", "close"); // 默认关闭连接
     }
     
     // 状态码设置方法
     public Response status(int statusCode) {
+        if (statusCode < 100 || statusCode > 599) {
+            throw new IllegalArgumentException("Invalid HTTP status code: " + statusCode);
+        }
         this.statusCode = statusCode;
         this.statusMessage = getStatusMessage(statusCode);
         return this;
@@ -45,8 +49,15 @@ public class Response {
     
     // 头部设置方法
     public Response header(String name, String value) {
-        headers.put(name, value);
+        // 规范化头部名称（首字母大写，其余小写）
+        String normalizedName = normalizeHeaderName(name);
+        headers.put(normalizedName, value);
         return this;
+    }
+    
+    private String normalizeHeaderName(String name) {
+        if (name == null || name.isEmpty()) return name;
+        return name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
     }
     
     public Response contentType(String contentType) {
@@ -56,7 +67,8 @@ public class Response {
     // 响应体设置方法
     public Response body(String body) {
         this.body = body;
-        return contentType("text/plain; charset=utf-8");
+        // 不强制设置字符集，保持灵活性
+        return this;
     }
     
     public Response json(String json) {
@@ -104,7 +116,8 @@ public class Response {
         
         // 内容长度
         if (!body.isEmpty()) {
-            sb.append("Content-Length: ").append(body.getBytes(StandardCharsets.UTF_8).length).append("\r\n");
+            int contentLength = body.getBytes(StandardCharsets.UTF_8).length;
+            sb.append("Content-Length: ").append(contentLength).append("\r\n");
         }
         
         // 空行分隔头部和主体
@@ -142,10 +155,15 @@ public class Response {
                 Objects.equals(cookies, response.cookies);
     }
     
+    @Override
+    public int hashCode() {
+        return Objects.hash(statusCode, statusMessage, headers, body, cookies);
+    }
+    
     // Cookie记录类
     public record Cookie(String name, String value, Map<String, String> attributes) {
         public Cookie(String name, String value) {
-            this(name, value, Map.of());
+            this(name, value, Map.of("HttpOnly", "true", "SameSite", "Lax"));
         }
         
         @Override

@@ -1,6 +1,7 @@
 package com.lightweb.framework.core;
 
 import java.io.InputStream;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,15 +22,30 @@ public record Request(
     
     public Request {
         headers = headers != null ? Map.copyOf(headers) : Map.of();
+        // 规范化头部名称（全部小写）
+        if (headers != null) {
+            var normalizedHeaders = new HashMap<String, String>();
+            headers.forEach((k, v) -> normalizedHeaders.put(k.toLowerCase(), v));
+            headers = Map.copyOf(normalizedHeaders);
+        } else {
+            headers = Map.of();
+        }
         queryParams = queryParams != null ? Map.copyOf(queryParams) : Map.of();
         pathParams = pathParams != null ? Map.copyOf(pathParams) : Map.of();
         body = body != null ? body : "";
+        // 验证路径格式
+        if (path != null && path.contains("..")) {
+            throw new IllegalArgumentException("Invalid path: path traversal detected");
+        }
     }
     
     /**
      * 获取请求头
      */
     public Optional<String> getHeader(String name) {
+        if (name == null || name.isBlank()) {
+            return Optional.empty();
+        }
         return Optional.ofNullable(headers.get(name.toLowerCase()));
     }
     
@@ -44,6 +60,9 @@ public record Request(
      * 获取路径参数
      */
     public Optional<String> getPathParam(String name) {
+        if (name == null || name.contains("..") || name.contains("/")) {
+            return Optional.empty(); // 防止路径遍历攻击
+        }
         return Optional.ofNullable(pathParams.get(name));
     }
     
@@ -51,6 +70,9 @@ public record Request(
      * 检查是否为特定HTTP方法
      */
     public boolean isMethod(String method) {
+        if (method == null || method.isBlank()) {
+            return false;
+        }
         return this.method.equalsIgnoreCase(method);
     }
     
@@ -79,7 +101,7 @@ public record Request(
      */
     public boolean isJson() {
         return getContentType()
-            .map(type -> type.contains("application/json"))
+            .map(type -> type.trim().toLowerCase().startsWith("application/json"))
             .orElse(false);
     }
     
@@ -88,5 +110,29 @@ public record Request(
      */
     public Optional<String> getUserAgent() {
         return getHeader("user-agent");
+    }
+    
+    /**
+     * 便捷构造方法
+     */
+    public static Request of(String method, String path) {
+        return new Request(method, path, "HTTP/1.1", Map.of(), Map.of(), Map.of(), "", null);
+    }
+    
+    public static Request of(String method, String path, Map<String, String> headers) {
+        return new Request(method, path, "HTTP/1.1", headers, Map.of(), Map.of(), "", null);
+    }
+    
+    /**
+     * 安全关闭输入流
+     */
+    public void close() {
+        if (rawInputStream != null) {
+            try {
+                rawInputStream.close();
+            } catch (IOException e) {
+                // 静默处理关闭异常
+            }
+        }
     }
 }
