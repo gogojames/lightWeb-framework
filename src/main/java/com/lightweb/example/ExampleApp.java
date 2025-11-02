@@ -14,15 +14,15 @@ import java.util.Map;
  * 演示框架的核心功能和API使用
  */
 public class ExampleApp {
+
+     // 创建安全过滤器
+     private static final SecurityFilter securityFilter = createSecurityFilter();
     
     public static void main(String[] args) throws Exception {
         System.out.println("🚀 Starting LightWeb Example Application...");
         
         // 创建路由器
         Router router = createRouter();
-        
-        // 创建安全过滤器
-        SecurityFilter securityFilter = createSecurityFilter();
         
         // 创建并启动服务器
         LightWebServer server = LightWebServer.builder()
@@ -169,16 +169,27 @@ public class ExampleApp {
         
         router.get("/api/users/:id", (req, res) -> {
             String userId = req.getPathParam("id").orElse("unknown");
+            
+            var sessionId=java.util.UUID.randomUUID().toString();
+            res.cookie("sessionid", sessionId, Map.of(
+                "HttpOnly", "true",
+                "SameSite", "Strict",
+                "Secure", "true",
+                "Path", "/",
+                "Max-Age", "3600"
+            ));
+            var csrf_token = securityFilter.generateCsrfToken(sessionId);
             res.json(String.format("""
                 {
                     "user": {
                         "id": "%s",
                         "name": "User %s",
                         "email": "user%s@example.com",
-                        "created_at": "%s"
+                        "created_at": "%s",
+                        "csrf_token": %s,
                     }
                 }
-                """, userId, userId, userId, java.time.LocalDate.now()));
+                """, userId, userId, userId, java.time.LocalDate.now(),csrf_token));
         });
         
         router.post("/api/users", (req, res) -> {
