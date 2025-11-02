@@ -5,7 +5,9 @@ import com.lightweb.framework.core.Response;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 /**
  * 安全过滤器
@@ -13,7 +15,7 @@ import java.util.regex.Pattern;
  */
 public class SecurityFilter {
     private final Set<String> allowedOrigins = ConcurrentHashMap.newKeySet();
-    private final Map<String, String> csrfTokens = new ConcurrentHashMap<>();
+    private final Map<String, CsrfToken> csrfTokens = new ConcurrentHashMap<>();
     private final Pattern xssPattern;
     private final Pattern sqlInjectionPattern;
     
@@ -70,7 +72,7 @@ public class SecurityFilter {
             return true;
             
         } catch (SecurityException e) {
-            response.forbidden().body("Security violation: " + e.getMessage());
+            response.forbidden().body("Security violation detected");
             return false;
         }
     }
@@ -109,7 +111,14 @@ public class SecurityFilter {
                 .header("X-XSS-Protection", "1; mode=block")
                 .header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
                 .header("Referrer-Policy", "strict-origin-when-cross-origin")
-                .header("Content-Security-Policy", "default-src 'self'");
+                .header("Content-Security-Policy", "default-src 'self'")
+                .header("Access-Control-Allow-Origin", getAllowedOriginsHeader())
+                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                .header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-CSRF-Token");
+    }
+    
+    private String getAllowedOriginsHeader() {
+        return allowedOrigins.isEmpty() ? "*" : String.join(", ", allowedOrigins);
     }
     
     /**
@@ -121,9 +130,10 @@ public class SecurityFilter {
             return false; // 没有会话ID
         }
         
-        String expectedToken = csrfTokens.get(sessionId);
-        if (expectedToken == null) {
-            return false; // 没有预期的令牌
+        CsrfToken csrfToken = csrfTokens.get(sessionId);
+        if (csrfToken == null || csrfToken.isExpired()) {
+            csrfTokens.remove(sessionId); // 清理过期令牌
+            return false; // 没有预期的令牌或令牌已过期
         }
         
         // 从请求中获取令牌
@@ -131,7 +141,7 @@ public class SecurityFilter {
             .or(() -> request.getQueryParam("csrf_token"))
             .orElse("");
         
-        return expectedToken.equals(actualToken);
+        return csrfToken.token().equals(actualToken);
     }
     
     /**
@@ -139,7 +149,7 @@ public class SecurityFilter {
      */
     public String generateCsrfToken(String sessionId) {
         String token = UUID.randomUUID().toString();
-        csrfTokens.put(sessionId, token);
+        csrfTokens.put(sessionId, new CsrfToken(token, System.currentTimeMillis()));
         return token;
     }
     
@@ -183,13 +193,14 @@ public class SecurityFilter {
      */
     private Pattern buildXssPattern() {
         String[] xssPatterns = {
-            "<script", "javascript:", "onload", "onerror", "onclick",
-            "eval\\(", "expression\\(", "vbscript:", "<iframe",
-            "<object", "<embed", "<applet"
+            "(?i)(<\\s*script|javascript\\s*:|on\\w+\\s*=)",
+            "(?i)(eval\\s*\\(|expression\\s*\\(|vbscript\\s*:)",
+            "(?i)(<\\s*(iframe|object|embed|applet))",
+            "(?i)(\\b(data|about):)"
         };
         
         String pattern = String.join("|", xssPatterns);
-        return Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+        return Pattern.compile(pattern);
     }
     
     /**
@@ -231,23 +242,51 @@ public class SecurityFilter {
      */
     private boolean validateJsonInput(String json) {
         try {
-            // 简单的JSON结构验证
-            if (json.length() > 10000) { // 限制JSON大小
+            if (json == null || json.length() > 10000) { // 限制JSON大小
                 return false;
             }
             
-            // 检查嵌套深度
-            int depth = 0;
-            for (char c : json.toCharArray()) {
-                if (c == '{') depth++;
-                if (c == '}') depth--;
-                if (depth > 10) return false; // 限制嵌套深度
-            }
-            
-            return true;
+            // 改进的JSON语法验证（不依赖第三方库）
+            return isValidJsonStructure(json);
         } catch (Exception e) {
             return false;
         }
+    }
+    
+    /**
+     * 验证JSON结构（零依赖实现）
+     */
+    private boolean isValidJsonStructure(String json) {
+        json = json.trim();
+        if (json.isEmpty()) return false;
+        
+        char firstChar = json.charAt(0);
+        char lastChar = json.charAt(json.length() - 1);
+        
+        // 检查基本结构：对象或数组
+        if ((firstChar == '{' && lastChar == '}') || 
+            (firstChar == '[' && lastChar == ']')) {
+            
+            // 检查括号平衡
+            int depth = 0;
+            boolean inString = false;
+            char prevChar = '\0';
+            
+            for (char c : json.toCharArray()) {
+                if (c == '"' && prevChar != '\\') {
+                    inString = !inString;
+                } else if (!inString) {
+                    if (c == '{' || c == '[') depth++;
+                    if (c == '}' || c == ']') depth--;
+                    if (depth < 0) return false; // 括号不匹配
+                }
+                prevChar = c;
+            }
+            
+            return depth == 0; // 括号必须平衡
+        }
+        
+        return false;
     }
     
     /**
@@ -282,12 +321,14 @@ public class SecurityFilter {
     private String getSessionId(Request request) {
         return request.getHeader("cookie")
             .map(cookie -> {
-                // 简单的Cookie解析
-                var cookies = cookie.split(";");
-                for (var c : cookies) {
-                    var parts = c.trim().split("=");
-                    if (parts.length == 2 && "sessionid".equals(parts[0])) {
-                        return parts[1];
+                // 安全的Cookie解析
+                Pattern cookiePattern = Pattern.compile("\\bsessionid\\s*=\\s*([^;]+)");
+                Matcher matcher = cookiePattern.matcher(cookie);
+                if (matcher.find()) {
+                    String sessionId = matcher.group(1).trim();
+                    // 验证会话ID格式（UUID格式）
+                    if (sessionId.matches("^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$")) {
+                        return sessionId;
                     }
                 }
                 return null;
@@ -344,7 +385,22 @@ public class SecurityFilter {
     }
     
     public SecurityFilter addAllowedOrigin(String origin) {
+        if (origin == null || origin.isBlank()) {
+            throw new IllegalArgumentException("Origin cannot be null or blank");
+        }
+        if (!origin.matches("^https?://[\\w\\-\\.]+(:\\d+)?$")) {
+            throw new IllegalArgumentException("Invalid origin format: " + origin);
+        }
         this.allowedOrigins.add(origin);
         return this;
+    }
+    
+    /**
+     * CSRF令牌记录类（带过期时间）
+     */
+    private record CsrfToken(String token, long timestamp) {
+        boolean isExpired() {
+            return System.currentTimeMillis() - timestamp > 30 * 60 * 1000; // 30分钟过期
+        }
     }
 }

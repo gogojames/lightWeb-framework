@@ -3,6 +3,8 @@ package com.lightweb.framework;
 import com.lightweb.framework.core.Request;
 import com.lightweb.framework.core.Response;
 import com.lightweb.framework.router.Router;
+import com.lightweb.framework.error.ErrorHandler;
+import com.lightweb.framework.error.NotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -112,7 +114,7 @@ class LightWebServerTest {
         router.handle(request, response);
         
         //assertEquals(403, response.statusCode);
-        assertEquals("Access Denied", response.body(""));
+        assertEquals(new Response().body("Access Denied"), response);
     }
     
     @Test
@@ -131,7 +133,7 @@ class LightWebServerTest {
         
         router.handle(request, response);
         
-        //assertEquals(500, response.statusCode);
+        assertEquals(new Response().internalError(), response);
         //assertTrue(response.body().contains("\"error\": \"Test error\""));
     }
     
@@ -218,17 +220,17 @@ class LightWebServerTest {
     
     @Test
     void testErrorHandler() {
-        var errorHandler = new com.lightweb.framework.error.ErrorHandler();
+        var errorHandler = new ErrorHandler();
         
         var request = new Request("GET", "/test", "HTTP/1.1", 
             Map.of(), Map.of(), Map.of(), "", null);
         var response = new Response();
         
         // 测试404处理
-        // errorHandler.handle(new com.lightweb.framework.error.NotFoundException("Not found"), 
-        //                    request, response);
+        errorHandler.handle(new NotFoundException("Not found"), 
+                            request, response);
         
-       // assertEquals(404, response.statusCode);
+       assertEquals(new Response().status(404), response);
         //assertTrue(response.body("").contains("404 - Page Not Found"));
     }
 }

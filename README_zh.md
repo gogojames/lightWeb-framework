@@ -1,6 +1,7 @@
 # LightWeb Framework 🚀
 [![中文](https://img.shields.io/badge/language-中文-blue.svg)](README_zh.md)
 [![English](https://img.shields.io/badge/language-English-blue.svg)](README.md)
+
 基于 **Java 25 TLS 版本** 开发的高性能轻量级网络框架，不依赖任何现有WEB框架。全面应用Java 25新特性，专为现代Web应用设计。
 
 ## ✨ 核心特性

@@ -216,20 +216,3 @@ public class ErrorHandler {
         );
     }
 }
-
-// 自定义异常类
-class NotFoundException extends RuntimeException {
-    public NotFoundException(String message) { super(message); }
-}
-
-class ValidationException extends RuntimeException {
-    public ValidationException(String message) { super(message); }
-}
-
-class UnauthorizedException extends RuntimeException {
-    public UnauthorizedException(String message) { super(message); }
-}
-
-class ForbiddenException extends RuntimeException {
-    public ForbiddenException(String message) { super(message); }
-}
