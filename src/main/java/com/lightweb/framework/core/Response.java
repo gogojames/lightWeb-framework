@@ -130,6 +130,17 @@ public class Response {
             default -> "Unknown";
         };
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Response response = (Response) o;
+        return statusCode == response.statusCode &&
+                Objects.equals(statusMessage, response.statusMessage) &&
+                Objects.equals(headers, response.headers) &&
+                Objects.equals(body, response.body) &&
+                Objects.equals(cookies, response.cookies);
+    }
     
     // Cookie记录类
     public record Cookie(String name, String value, Map<String, String> attributes) {

@@ -1,1 +1,3 @@
 /Users/xianxiyang/CodeBuddy/LightWeb/src/test/java/com/lightweb/framework/LightWebServerTest.java
+/Users/xianxiyang/CodeBuddy/LightWeb/src/test/java/com/lightweb/framework/websocket/WebSocketHandshakeTest.java
+/Users/xianxiyang/CodeBuddy/LightWeb/src/test/java/com/lightweb/framework/websocket/WebSocketFrameTest.java
