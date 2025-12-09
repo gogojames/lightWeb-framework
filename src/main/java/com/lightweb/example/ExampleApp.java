@@ -7,7 +7,20 @@ import com.lightweb.framework.router.Router;
 import com.lightweb.framework.security.SecurityFilter;
 import com.lightweb.framework.util.PerformanceMonitor;
 
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.DoubleSummaryStatistics;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * LightWeb框架示例应用
@@ -204,14 +217,14 @@ public class ExampleApp {
             }
             
             // 简单的JSON解析（实际应用中可以使用JSON库）
-            String body = req.body();
+            String body = req.body().trim().replaceAll("[\\n\\r]+","");
             res.status(201).json(String.format("""
                 {
                     "message": "User created successfully",
                     "data": %s,
                     "id": "%s"
                 }
-                """, body, java.util.UUID.randomUUID()));
+                """, body, java.util.UUID.randomUUID().toString()));
         });
         
         router.get("/api/performance", (req, res) -> {
@@ -309,4 +322,89 @@ public class ExampleApp {
         sb.append("\n    }");
         return sb.toString();
     }
+    private static String TEST_FILE_PATH = "";
+    record StartEndRecord(long chunkStart,long chunkEnd){}
+    private static void readFile() throws IOException {
+    List<StartEndRecord> records = new ArrayList<>();
+    long numberOfChunks = 3l;
+    try (RandomAccessFile file = new RandomAccessFile(TEST_FILE_PATH, "r")) {
+        FileChannel channel = file.getChannel();
+        long fileSize = channel.size();
+        MemorySegment map = channel.map(FileChannel.MapMode.READ_ONLY, 0, fileSize, Arena.global());
+
+        long start = 0;
+        long chunkSize = fileSize / numberOfChunks;
+
+        for (long i = 0; i < numberOfChunks; i++) {
+            long endCandidate = start + chunkSize;
+            while (endCandidate < fileSize && map.get(ValueLayout.JAVA_BYTE, endCandidate) != '\n') {
+                endCandidate++;
+            }
+            records.add(new StartEndRecord(start, Math.min(endCandidate, fileSize)));
+            start = Math.min(endCandidate, fileSize);
+        }
+
+        Map<String, DoubleSummaryStatistics> stringDoubleSummaryStatisticsMap = processFile((int) numberOfChunks, records, map);
+        System.out.println(stringDoubleSummaryStatisticsMap);
+    }
+}
+
+private static Map<String, DoubleSummaryStatistics> processFile (int numChunks, List<StartEndRecord> records, MemorySegment map) {
+    Map<String, DoubleSummaryStatistics> valueMap = new HashMap<>();
+    try (ExecutorService service = Executors.newFixedThreadPool(numChunks)) {
+        records.parallelStream().forEach(r -> {
+            service.execute(() -> {
+                long chunkStart = r.chunkStart;
+                long chunkEnd = r.chunkEnd;
+                long index = chunkStart;
+                String name = "";
+                String number = "";
+                // TODO: for the reader, this could and should be extracted to another method
+                while (index < chunkEnd) {
+                    char currentChar = (char)map.get(ValueLayout.JAVA_BYTE, index);
+                    while (currentChar != ';' && index < chunkEnd) {
+                        name += currentChar;
+                        index++;
+                        currentChar = (char)map.get(ValueLayout.JAVA_BYTE, index);
+                    }
+                    index++;
+                    if (index >= chunkEnd) {
+                        break;
+                    }
+                    currentChar = (char)map.get(ValueLayout.JAVA_BYTE, index);
+
+                    while (currentChar != '\n') {
+                        number += currentChar;
+                        index++;
+                        if (index >= chunkEnd) {
+                            break;
+                        }
+                        currentChar = (char)map.get(ValueLayout.JAVA_BYTE, index);
+                    }
+
+                    double d = Double.parseDouble(number);
+                    DoubleSummaryStatistics stats = valueMap.containsKey(name) ? valueMap.get(name) : new DoubleSummaryStatistics();
+                    if (valueMap.containsKey(name)) {
+                        stats.accept(d);
+                    } else {
+                        stats.accept(d);
+                    }
+                    stats.accept(d);
+                    valueMap.put(name, stats);
+                    name = "";
+                    number = "";
+                }
+            });
+        });
+        try {
+            service.shutdown();
+            while (!service.awaitTermination(3, TimeUnit.MINUTES)) {
+                System.out.println("Not terminated yet");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return valueMap;
+    }
+}
 }

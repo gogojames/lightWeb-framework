@@ -1,2 +1,6 @@
 .DS_Store
+.codebuddy
+.specify
+.vscode
 target
+specs

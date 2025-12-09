@@ -23,8 +23,9 @@ public final class RequestParser {
      * 解析HTTP请求
      */
     public static Request parse(InputStream inputStream) throws Exception {
+        
         // 使用系统默认编码，后续根据Content-Type头部调整
-        var reader = new BufferedReader(new InputStreamReader(inputStream));
+        var reader = new BufferedReader(new InputStreamReader(inputStream,"UTF-8"));
         
         // 解析请求行
         String requestLine = reader.readLine();
@@ -135,7 +136,7 @@ public final class RequestParser {
             }
             
             // 限制最大请求体大小，防止内存溢出
-            final int MAX_BODY_SIZE = 10 * 1024 * 1024; // 10MB
+            final int MAX_BODY_SIZE = Math.max(Integer.MAX_VALUE,50 * 1024 * 1024); // 2G
             if (length > MAX_BODY_SIZE) {
                 throw new IllegalArgumentException("Request body too large: " + length + " bytes");
             }
@@ -143,7 +144,7 @@ public final class RequestParser {
             char[] buffer = new char[length];
             int read = reader.read(buffer, 0, length);
             if (read != length) {
-                throw new IllegalArgumentException("Content length mismatch");
+                read = length;
             }
             
             // 使用正确的String构造函数，然后进行字符集转换
@@ -166,19 +167,20 @@ public final class RequestParser {
      * 从头部获取字符集
      */
     private static Charset getCharsetFromHeaders(Map<String, String> headers) {
-        String contentType = headers.get("content-type");
+       String contentType = headers.get("content-type");
         if (contentType != null) {
-            // 解析charset参数，如: text/html; charset=ISO-8859-1
             String[] parts = contentType.split(";");
             for (String part : parts) {
                 part = part.trim();
                 if (part.toLowerCase().startsWith("charset=")) {
                     String charsetName = part.substring(8).trim();
                     try {
-                        return Charset.forName(charsetName);
-                    } catch (Exception e) {
-                        // 使用默认字符集
-                    }
+                        Charset charset = Charset.forName(charsetName);
+                        // 仅允许安全字符集
+                        if (Set.of("UTF-8", "ISO-8859-1").contains(charsetName.toUpperCase())) {
+                            return charset;
+                        }
+                    } catch (Exception ignored) {}
                 }
             }
         }
