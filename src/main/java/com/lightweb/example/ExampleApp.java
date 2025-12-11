@@ -1,8 +1,6 @@
 package com.lightweb.example;
 
 import com.lightweb.framework.LightWebServer;
-import com.lightweb.framework.core.Request;
-import com.lightweb.framework.core.Response;
 import com.lightweb.framework.router.Router;
 import com.lightweb.framework.security.SecurityFilter;
 import com.lightweb.framework.util.PerformanceMonitor;
