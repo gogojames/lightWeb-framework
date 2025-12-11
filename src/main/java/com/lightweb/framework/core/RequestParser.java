@@ -58,7 +58,7 @@ public final class RequestParser {
         // 解析请求体
         String body = parseBody(reader, headers);
         
-        return new Request(method, path, protocol, headers, queryParams, Map.of(), body, inputStream);
+        return new Request(method, path, protocol, headers, queryParams, Map.of(), body, inputStream, Map.of());
     }
     
     /**
@@ -127,6 +127,10 @@ public final class RequestParser {
         var contentLength = headers.get("content-length");
         if (contentLength == null || contentLength.isBlank()) {
             return "";
+        }
+
+        if (isMultipartRequest(headers)) {
+        return ""; // 文件上传请求的文本内容为空
         }
         
         try {
@@ -215,5 +219,25 @@ public final class RequestParser {
         } catch (NumberFormatException e) {
             return OptionalInt.empty();
         }
+    }
+
+    private static String parseContentType(Map<String, String> headers) {
+    return headers.get("content-type");
+    }
+
+    private static boolean isMultipartRequest(Map<String, String> headers) {
+        String contentType = parseContentType(headers);
+        return contentType != null && contentType.startsWith("multipart/form-data");
+    }
+
+    private static String extractBoundary(String contentType) {
+        String[] parts = contentType.split(";");
+        for (String part : parts) {
+            part = part.trim();
+            if (part.startsWith("boundary=")) {
+                return part.substring("boundary=".length()).trim();
+            }
+        }
+        throw new IllegalArgumentException("Missing boundary in multipart request");
     }
 }
