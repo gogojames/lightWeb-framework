@@ -3,4 +3,5 @@
 .specify
 .vscode
 target
+target/classes
 specs
