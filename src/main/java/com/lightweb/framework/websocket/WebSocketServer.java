@@ -472,7 +472,7 @@ public class WebSocketServer implements AutoCloseable {
             }
         }
         
-        return new Request(method, path, protocol, headers, Map.of(), Map.of(), "", null);
+        return new Request(method, path, protocol, headers, Map.of(), Map.of(), "", null,null);
     }
     
     /**

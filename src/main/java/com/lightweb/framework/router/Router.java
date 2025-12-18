@@ -137,7 +137,8 @@ public class Router {
                 request.queryParams(),
                 pathParams,
                 request.body(),
-                request.rawInputStream()
+                request.rawInputStream(),
+                request.files()
             );
             
             // 执行路由处理器

@@ -54,6 +54,32 @@ public class Response {
         headers.put(normalizedName, value);
         return this;
     }
+
+    /**
+     * 获取响应头（不区分大小写）
+     */
+    public Optional<String> getHeader(String name) {
+        if (name == null || name.isBlank()) return Optional.empty();
+        String target = name.trim();
+        // 优先使用规范化名称快速查找
+        String normalized = normalizeHeaderName(target);
+        String v = headers.get(normalized);
+        if (v != null) return Optional.of(v);
+        // 回退：遍历进行不区分大小写匹配
+        for (var entry : headers.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(target)) {
+                return Optional.ofNullable(entry.getValue());
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * 返回当前所有响应头的不可变拷贝（保留大小写）。
+     */
+    public Map<String, String> getHeaders() {
+        return Map.copyOf(headers);
+    }
     
     private String normalizeHeaderName(String name) {
         if (name == null || name.isEmpty()) return name;

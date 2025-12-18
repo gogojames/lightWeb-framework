@@ -3,6 +3,8 @@ package com.lightweb.framework;
 import com.lightweb.framework.core.*;
 import com.lightweb.framework.router.Router;
 import com.lightweb.framework.security.SecurityFilter;
+import com.lightweb.framework.util.RepeatableInputStream;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -71,7 +73,8 @@ public final class LightWebServer {
      */
     private void handleConnection(Socket clientSocket) {
         try (clientSocket) {
-            var request = RequestParser.parse(clientSocket.getInputStream());
+            try(var input= new RepeatableInputStream(clientSocket.getInputStream())){
+            var request = RequestParser.parse(input);
             var response = new Response();
             
             // 安全过滤
@@ -84,7 +87,9 @@ public final class LightWebServer {
             router.handle(request, response);
             
             sendResponse(clientSocket, response);
+         }
         } catch (Exception e) {
+            e.printStackTrace();
             System.err.println("Error handling connection: " + e.getMessage());
         }
     }

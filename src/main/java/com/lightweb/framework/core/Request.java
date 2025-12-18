@@ -1,12 +1,11 @@
 package com.lightweb.framework.core;
 
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.lightweb.framework.util.FilePart;
 
 /**
  * HTTP请求封装类
@@ -21,7 +20,7 @@ public record Request(
     Map<String, String> pathParams,
     String body,
     InputStream rawInputStream,
-    Map<String, Part> parts
+    Map<String, FilePart> files
 ) {
     
     public Request {
@@ -40,49 +39,6 @@ public record Request(
         // 验证路径格式
         if (path != null && path.contains("..")) {
             throw new IllegalArgumentException("Invalid path: path traversal detected");
-        }
-        parts = parts != null ? Map.copyOf(parts) : Map.of();
-    }
-
-    /**
-     * 获取文件上传部分
-     */
-    public Optional<Part> getPart(String name) {
-        return Optional.ofNullable(parts.get(name));
-    }
-
-    /**
-     * 文件部分封装类
-     */
-    public static class Part {
-        private final String name;
-        private final String filename;
-        private final InputStream content;
-        private final Map<String, String> headers;
-
-        public Part(String name, String filename, InputStream content, Map<String, String> headers) {
-            this.name = Objects.requireNonNull(name);
-            this.filename = filename; // 允许为null（非文件字段）
-            this.content = Objects.requireNonNull(content);
-            this.headers = Map.copyOf(headers);
-        }
-
-        // Getters
-        public String getName() { return name; }
-        public Optional<String> getFilename() { return Optional.ofNullable(filename); }
-        public InputStream getContent() { return content; }
-        public Map<String, String> getHeaders() { return headers; }
-
-        /**
-         * 安全保存文件到指定目录
-         */
-        public void saveTo(Path targetDir) throws IOException {
-            if (filename == null) return; // 跳过非文件字段
-            if (filename.contains("..") || filename.contains("/")) {
-                throw new SecurityException("Invalid filename: " + filename);
-            }
-            Path targetPath = targetDir.resolve(filename);
-            Files.copy(content, targetPath, StandardCopyOption.REPLACE_EXISTING);
         }
     }
     
@@ -167,7 +123,14 @@ public record Request(
     }
     
     public static Request of(String method, String path, Map<String, String> headers) {
-        return new Request(method, path, "HTTP/1.1", headers, Map.of(), Map.of(), "", null,Map.of());
+        return new Request(method, path, "HTTP/1.1", headers, Map.of(), Map.of(), "", null, Map.of());
+    }
+
+    public static Request of(Request req,Map<String, String> queryParams,Map<String, FilePart> files) {
+        queryParams.putAll(req.queryParams());
+        files.putAll(req.files());
+        return new Request(req.method(), req.path(), req.protocol(), req.headers(), 
+        queryParams, req.pathParams(), req.body(), req.rawInputStream(), files);
     }
     
     /**

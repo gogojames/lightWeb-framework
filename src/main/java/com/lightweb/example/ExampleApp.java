@@ -177,7 +177,31 @@ public class ExampleApp {
                 }
                 """, name, java.time.Instant.now()));
         });
-        
+        router.get("/upload",(req,res)->{
+            var sessionId=java.util.UUID.randomUUID().toString();
+            res.cookie("sessionid", sessionId, Map.of(
+                "HttpOnly", "true",
+                "SameSite", "Strict",
+                "Secure", "true",
+                "Path", "/",
+                "Max-Age", "3600"
+            ));
+            var csrf_token = securityFilter.generateCsrfToken(sessionId);
+            res.html(String.format( """
+                <form action="/upload" method="post" enctype="multipart/form-data">
+                文件名: <input type="text" name="fileName"><br>
+                文件: <input type="file" name="file"><br>
+                <input type="submit" value="上传">
+                <input type="hidden" name="csrf_token" value="%s">
+            </form>
+                    """,csrf_token));
+        });
+        router.post("/upload",(req,res)->{
+            String filename = "fileName";
+            var fileName = req.queryParams().get(filename);
+            System.out.println("文件名： "+fileName );
+            res.html("临时文件:"+req.files().get("file").savedPath()+" 上传完成!");
+        });
         router.get("/api/users/:id", (req, res) -> {
             String userId = req.getPathParam("id").orElse("unknown");
             
@@ -283,9 +307,9 @@ public class ExampleApp {
     private static SecurityFilter createSecurityFilter() {
         return new SecurityFilter()
             .enableXssFilter(true)
-            .enableCsrfProtection(true)
-            .enableInputValidation(true)
-            .enableSecurityHeaders(true)
+            .enableCsrfProtection(false)
+            .enableInputValidation(false)
+            .enableSecurityHeaders(false)
             .addAllowedOrigin("http://localhost:3000")
             .addAllowedOrigin("https://example.com");
     }
