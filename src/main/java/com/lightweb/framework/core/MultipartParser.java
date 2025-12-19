@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PushbackInputStream;
-import java.nio.charset.StandardCharsets;
+//import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,7 +12,7 @@ import com.lightweb.framework.util.LimitedInputStream;
 import com.lightweb.framework.util.PartConsumer;
 import com.lightweb.framework.util.RepeatableInputStream;
 
-public class MultipartParser implements Closeable{
+public class MultipartParser {
     private final PushbackInputStream input;
     private final byte[] boundary;
     private final byte[] endBoundary;
@@ -164,8 +164,8 @@ public class MultipartParser implements Closeable{
 
     // 移除本地缓冲读取，直接在底层流上进行解析以保持指针一致
 
-        @Override
-        public void close() throws IOException {
-            input.close();
-        }
+        // @Override
+        // public void close() throws IOException {
+        //     input.close();
+        // }
 }

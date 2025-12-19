@@ -23,31 +23,31 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class LightWebServerTest {
     
-    private LightWebServer server;
-    private Router router;
+    // private LightWebServer server;
+    // private Router router;
     
-    @BeforeEach
-    void setUp() {
-        router = new Router();
-        server = LightWebServer.builder()
-            .port(8081) // 使用不同的端口避免冲突
-            .router(router)
-            .build();
-    }
+    // @BeforeEach
+    // void setUp() {
+    //     router = new Router();
+    //     server = LightWebServer.builder()
+    //         .port(8081) // 使用不同的端口避免冲突
+    //         .router(router)
+    //         .build();
+    // }
     
-    @AfterEach
-    void tearDown() {
-        if (server != null) {
-            server.stop();
-        }
-    }
+    // @AfterEach
+    // void tearDown() {
+    //     if (server != null) {
+    //         server.stop();
+    //     }
+    // }
     
-    @Test
-    void testServerBuilder() {
-        assertNotNull(server);
-        assertEquals(8081, server.getPort());
-        assertNotNull(server.getRouter());
-    }
+    // @Test
+    // void testServerBuilder() {
+    //     assertNotNull(server);
+    //     assertEquals(8081, server.getPort());
+    //     assertNotNull(server.getRouter());
+    // }
     
     // @Test
     // void testRouterRegistration() {

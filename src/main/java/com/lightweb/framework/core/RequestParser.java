@@ -327,7 +327,8 @@ public final class RequestParser {
         byte[] endBoundaryBytes = (boundary + "--").getBytes(StandardCharsets.UTF_8);
         readedSize+=endBoundaryBytes.length;
         int contentLengthLeft = contentLength - readedSize;
-        try (MultipartParser parser = new MultipartParser(inputStream, boundaryBytes, endBoundaryBytes)) {
+       // try {
+            MultipartParser parser = new MultipartParser(inputStream, boundaryBytes, endBoundaryBytes);
             parser.parse((headers, bodyStream) -> {
                  String disposition = headers.get("content-disposition");
                  if (disposition == null) return;
@@ -343,7 +344,7 @@ public final class RequestParser {
                      }
                  }
              });
-        }
+       // }
         return  Request.of(req,queryParams,files);
     }
 

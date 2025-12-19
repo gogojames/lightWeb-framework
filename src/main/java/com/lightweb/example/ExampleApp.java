@@ -198,7 +198,7 @@ public class ExampleApp {
         });
         router.post("/upload",(req,res)->{
             String filename = "fileName";
-            var fileName = req.queryParams().get(filename);
+            var fileName = req.queryParams().getOrDefault(filename, "unknown");
             System.out.println("文件名： "+fileName );
             res.html("临时文件:"+req.files().get("file").savedPath()+" 上传完成!");
         });

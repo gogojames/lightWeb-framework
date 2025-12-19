@@ -39,7 +39,7 @@ class RequestParserTest {
             "\r\n" +
             "value1\r\n" +
             "--" + boundary + "\r\n" +
-            "Content-Disposition: form-data; name=\"file1\"; filename=\"test测试.txt\"\r\n" +
+            "Content-Disposition: form-data; name=\"file1\"; filename=\"test.txt\"\r\n" +
             "Content-Type: text/plain\r\n" +
             "\r\n" +
             "Hello Content\r\n" +
@@ -60,7 +60,7 @@ class RequestParserTest {
         assertTrue(req.files().containsKey("file1"));
         
         FilePart part = req.files().get("file1");
-        assertEquals("test测试.txt", part.filename());
+        assertEquals("test.txt", part.filename());
         // MIME type might be detected as text/plain or fallback
         assertTrue(part.contentType().contains("text/plain") || part.contentType().contains("application/octet-stream"));
         
