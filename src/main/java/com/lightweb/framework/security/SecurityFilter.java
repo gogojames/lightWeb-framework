@@ -359,7 +359,7 @@ public class SecurityFilter {
     private boolean exceedsContentLengthLimit(Request request) {
         return request.getHeader("content-length")
             .map(Integer::parseInt)
-            .map(length -> length > 10 * 1024 * 1024) // 10MB限制
+            .map(length -> length > 150 * 1024 * 1024) // 150MB限制
             .orElse(false);
     }
     
