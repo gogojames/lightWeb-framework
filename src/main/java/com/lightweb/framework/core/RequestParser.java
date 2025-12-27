@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.lightweb.framework.util.FilePart;
 import com.lightweb.framework.util.RepeatableInputStream;
@@ -51,16 +52,16 @@ public final class RequestParser {
         }
 
         // 基于字节解析以避免 Reader 预读导致主体丢失
-        String requestLine = readLineBytes(inputStream);
-       
+        String requestHeader = inputStream.readHeaderString(); //readLineBytes(inputStream);
+       readedSize = inputStream.getReadedSize();
 
-        if (requestLine == null || requestLine.isBlank()) {
+        if (requestHeader == null || requestHeader.isBlank()) {
             throw new IllegalArgumentException("Invalid request line");
         }
-        
-        var requestParts = requestLine.split(" ");
+        String[] reqHeadArry = requestHeader.split("\n");
+        var requestParts = Optional.ofNullable(reqHeadArry[0]).orElse("").split(" ");
         if (requestParts.length != 3) {
-            throw new IllegalArgumentException("Malformed request line: " + requestLine);
+            throw new IllegalArgumentException("Malformed request line: " + requestHeader);
         }
         
         String method = requestParts[0];
@@ -79,8 +80,15 @@ public final class RequestParser {
         Map<String, String> queryParams = new HashMap<>(pathAndQuery.getValue());
         Map<String, FilePart> files = new HashMap<>();
         // 解析头部（字节级，直到空行）
-        Map<String, String> headers = parseHeadersBytes(inputStream);
-        
+        Map<String, String> headers = Arrays.stream(reqHeadArry)
+                                       // .filter(s->HEADER_PATTERN.matcher(s).matches())
+                                        .map(s -> s.split(":", 2)) // 分割为键值数组，最多分割两次
+                                        .filter(s-> s.length == 2)
+                                        .collect(Collectors.toMap(
+                                            parts -> parts[0].trim().toLowerCase(),
+                                            parts -> parts[1].trim()
+                                        ));  //parseHeadersBytes(inputStream);
+
         Optional<String> contentType = getContentType(headers);
         boolean isMultipart = contentType.isPresent() && contentType.get().startsWith("multipart/form-data");
         // 解析请求体

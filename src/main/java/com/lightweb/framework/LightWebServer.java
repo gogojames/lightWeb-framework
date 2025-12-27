@@ -59,6 +59,7 @@ public final class LightWebServer {
         while (running.get()) {
             try {
                 Socket clientSocket = serverSocket.accept();
+                clientSocket.setSoTimeout(600);
                 workerPool.submit(() -> handleConnection(clientSocket));
             } catch (IOException e) {
                 if (running.get()) {
