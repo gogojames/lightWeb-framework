@@ -372,7 +372,7 @@ public final class RequestParser {
             throw new IllegalArgumentException("Blocked file type: " + ext);
         }
         
-        Path savePath = TempFileHandler.createSystemTempFile(Paths.get("temp",filename),"",filename);  //Paths.get("tmp/upload", UUID.randomUUID().toString() + "_" + filename);
+        Path savePath = TempFileHandler.createSystemTempFile(Paths.get("temp",filename),".",filename);  //Paths.get("tmp/upload", UUID.randomUUID().toString() + "_" + filename);
         //Files.createDirectories(savePath.getParent());
         
         // 资源管理：确保输出流和输入流（如果需要）都被关闭
